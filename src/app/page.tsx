@@ -13,10 +13,11 @@ export default function SubmissionForm() {
       redirect('/auth/signin');
     },
   });
+  console.log(session?.user)
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-
+    console.log(images)
     try {
       const formData = new FormData();
       formData.append('name', name);
@@ -40,6 +41,7 @@ export default function SubmissionForm() {
         alert('Submission successful!');
       }
     } catch (error) {
+      console.error('Error:', error);
       alert('Error submitting form');
     } finally {
       setLoading(false);
@@ -47,9 +49,9 @@ export default function SubmissionForm() {
   };
 
   return (
-    <div className="container mx-auto p-4">
-      <div className="max-w-md mx-auto bg-white rounded-lg shadow-md p-6">
-        <h2 className="text-2xl font-bold mb-6 text-center">Social Media Submission</h2>
+    <div className="container mx-auto pt-14">
+      <div className="w-5/6	 mx-auto bg-white rounded-lg shadow-md p-6">
+        <h2 className="text-2xl text-black font-bold mb-6 text-center">Social Media Submission</h2>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <input
@@ -76,15 +78,16 @@ export default function SubmissionForm() {
               type="file"
               multiple
               accept="image/*"
-              className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full text-black px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
               onChange={(e) => setImages(e.target.files)}
+              
               required
             />
           </div>
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-blue-500 text-white py-2 px-4 rounded-lg hover:bg-blue-600 disabled:bg-blue-300 disabled:cursor-not-allowed transition-colors"
+            className="w-100 bg-blue-500 text-white py-2 px-4 rounded-lg hover:bg-blue-600 disabled:bg-blue-300 disabled:cursor-not-allowed transition-colors"
           >
             {loading ? 'Submitting...' : 'Submit'}
           </button>

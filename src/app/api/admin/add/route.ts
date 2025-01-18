@@ -1,7 +1,5 @@
-import type { NextApiRequest, NextApiResponse } from 'next';
 import connectDB from '../../../lib/mongodb';
 import Admin from '../../../models/Admin';
-import User from '../../../models/User';
 import { NextResponse } from 'next/server';
 
 
@@ -16,13 +14,11 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Email and secret key are required' }, { status: 400 });
     }
 
-    // Add your secret key validation logic here
-    const validSecretKey = process.env.ADMIN_SECRET_KEY; // Replace with your secret key logic
+    const validSecretKey = process.env.ADMIN_SECRET_KEY; 
     if (secretKey !== validSecretKey) {
       return NextResponse.json({ error: 'Invalid secret key' }, { status: 403 });
     }
 
-    // Check if admin already exists
     const existingAdmin = await Admin.findOne({ email });
     if (existingAdmin) {
       

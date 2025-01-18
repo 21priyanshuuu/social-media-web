@@ -1,53 +1,88 @@
-// src/app/api/upload/route.ts
 import { NextResponse } from 'next/server';
 import { writeFile, mkdir } from 'fs/promises';
-import { join } from 'path';
+import { join, basename } from 'path';
 import connectDB from '../../lib/mongodb';
 import User from '../../models/User';
-
+import { getServerSession } from 'next-auth';
+import { authOptions } from '../../lib/auth';
 export async function POST(req: Request) {
   try {
+    const session = await getServerSession(authOptions);
+
+    if (!session || !session.user.email) {
+      return NextResponse.json(
+        { error: 'Unauthorized. Please log in first.' },
+        { status: 401 }
+      );
+    }
+
+    const email = session.user.email;
+
     const formData = await req.formData();
     const name = formData.get('name') as string;
     const socialHandle = formData.get('socialHandle') as string;
     const files = formData.getAll('images') as File[];
 
+    if (!name || !socialHandle || files.length === 0) {
+      return NextResponse.json(
+        { error: 'Name, social handle, and at least one image are required.' },
+        { status: 400 }
+      );
+    }
+
     await connectDB();
 
-    // Create uploads directory if it doesn't exist
     const uploadDir = join(process.cwd(), 'public', 'uploads');
     try {
       await mkdir(uploadDir, { recursive: true });
     } catch (err) {
-      // Directory might already exist, ignore error
+      console.log(err)
+      
     }
 
     const imagePaths: string[] = [];
-
     for (const file of files) {
       const bytes = await file.arrayBuffer();
       const buffer = Buffer.from(bytes);
-      
-      // Generate unique filename to avoid conflicts
-      const uniqueSuffix = `${Date.now()}-${Math.round(Math.random() * 1E9)}`;
-      const filename = `${uniqueSuffix}-${file.name}`;
+
+      const safeFilename = basename(file.name).replace(/[^a-z0-9\.-]/gi, '_');
+      const uniqueSuffix = `${Date.now()}-${Math.round(Math.random() * 1e9)}`;
+      const filename = `${uniqueSuffix}-${safeFilename}`;
       const filepath = join(uploadDir, filename);
-      
+
       await writeFile(filepath, buffer);
       imagePaths.push(`/uploads/${filename}`);
     }
 
-    const user = await User.create({
-      name,
-      socialHandle,
-      images: imagePaths,
-    });
+    const existingUser = await User.findOne({ email, name });
 
-    return NextResponse.json({ success: true, user });
+    if (existingUser) {
+      existingUser.images.push(...imagePaths);
+      await existingUser.save();
+
+      return NextResponse.json({
+        success: true,
+        message: 'Images appended to existing user.',
+        user: existingUser,
+      });
+    } else {
+      const newUser = await User.create({
+        name,
+        email,
+        socialHandle,
+        images: imagePaths,
+      });
+
+      return NextResponse.json({
+        success: true,
+        message: 'New user created.',
+        user: newUser,
+      });
+    }
   } catch (error) {
     console.error('Upload error:', error);
     return NextResponse.json(
-      { error: 'Failed to upload' },
+      { error: 'Failed to upload. Please try again.' },
       { status: 500 }
     );
   }

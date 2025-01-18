@@ -5,13 +5,15 @@ interface IUser extends Document {
   socialHandle: string;
   images: string[];
   createdAt: Date;
+  email:string;
 }
 
-const UserSchema = new Schema({
+const SUserSchema = new Schema({
   name: { type: String, required: true },
   socialHandle: { type: String, required: true },
   images: [{ type: String, required: true }],
   createdAt: { type: Date, default: Date.now },
+  email: { type: String, required: true },
 });
 
-export default mongoose.models.User || mongoose.model<IUser>('User', UserSchema);
+export default mongoose.models.SUser || mongoose.model<IUser>('SUser', SUserSchema);

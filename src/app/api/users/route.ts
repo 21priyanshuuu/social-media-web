@@ -8,6 +8,7 @@ export async function GET() {
     const users = await User.find().sort({ createdAt: -1 });
     return NextResponse.json({ users });
   } catch (error) {
+console.log(error);
     return NextResponse.json(
       { error: 'Failed to fetch users' },
       { status: 500 }

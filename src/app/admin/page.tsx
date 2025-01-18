@@ -8,6 +8,7 @@ import axios from 'axios';
 interface User {
   _id: string;
   name: string;
+  email: string;
   socialHandle: string;
   images: string[];
   createdAt: string;
@@ -23,14 +24,12 @@ export default function AdminPage() {
 
   const [users, setUsers] = useState<User[]>([]);
   const [isRegistered, setIsRegistered] = useState(false);
-  const [adminData, setAdminData] = useState<any>(null);
 
   const [email, setEmail] = useState('');
   const [secretKey, setSecretKey] = useState('');
   const [message, setMessage] = useState('');
   const [loading, setLoading] = useState(false);
 
-  // Fetch registered users
   useEffect(() => {
     const fetchUsers = async () => {
       try {
@@ -42,25 +41,23 @@ export default function AdminPage() {
     };
 
     fetchUsers();
-    const interval = setInterval(fetchUsers, 30000); // Refresh every 30 seconds
+    const interval = setInterval(fetchUsers, 30000); 
     return () => clearInterval(interval);
   }, []);
 
-  // Check if user is already registered as admin
   useEffect(() => {
     const checkAdminStatus = async () => {
       if (!session?.user?.email) {
-        return; // Don't proceed if email is not available
+        return; 
       }
     
       try {
         const response = await axios.get('/api/admin/check-registration', {
-          params: { email: session.user.email }, // Pass the email as a query parameter
+          params: { email: session.user.email },
         });
     
         if (response.status === 200) {
           setIsRegistered(true);
-          setAdminData(response.data); // Assuming this returns admin-specific data
         }
       } catch (error) {
         console.error('Error checking admin registration:', error);
@@ -71,7 +68,6 @@ export default function AdminPage() {
     checkAdminStatus();
   }, []);
 
-  // Handle admin registration form submission
   const handleAdminRegistration = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
@@ -79,25 +75,29 @@ export default function AdminPage() {
 
     try {
       const response = await axios.post('/api/admin/add', { email, secretKey });
-
+    
       if (response.status === 200) {
         setMessage('Admin registration successful!');
         setEmail('');
         setSecretKey('');
         setIsRegistered(true);
-        setAdminData(response.data); // Assuming the response includes admin-specific data
       } else {
         setMessage(response.data.error || 'Failed to register as admin');
       }
-    } catch (error: any) {
-      setMessage(error.response?.data?.message || 'An error occurred. Please try again.');
+    } catch (error: unknown) {
+      if (axios.isAxiosError(error)) {
+        setMessage(error.response?.data?.message || 'An error occurred. Please try again.');
+      } else {
+        setMessage('An unexpected error occurred. Please try again.');
+      }
     } finally {
       setLoading(false);
     }
+    
   };
 
   if (!session) {
-    return null; // Prevent rendering until session is loaded
+    return null; 
   }
 
   return (
@@ -115,6 +115,8 @@ export default function AdminPage() {
                   <div key={user._id} className="bg-white rounded-lg shadow-md overflow-hidden">
                     <div className="p-4">
                       <h2 className="text-xl font-semibold">{user.name}</h2>
+                      <p className="text-gray-500">{user.email}</p>
+
                       <p className="text-gray-500">@{user.socialHandle}</p>
                     </div>
                     <div className="p-4 grid grid-cols-2 gap-2">

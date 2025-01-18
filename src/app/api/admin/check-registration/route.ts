@@ -1,6 +1,5 @@
-// import { NextApiRequest, NextApiResponse } from 'next';
-import connectDB from '../../../lib/mongodb'; // Adjust path as needed
-import Admin from '../../../models/Admin'; // Ensure Admin model exists and is imported
+import connectDB from '../../../lib/mongodb'; 
+import Admin from '../../../models/Admin'; 
 import { NextResponse } from 'next/server';
 
 
