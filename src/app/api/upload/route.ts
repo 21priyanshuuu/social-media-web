@@ -5,6 +5,7 @@ import connectDB from '../../lib/mongodb';
 import User from '../../models/User';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '../../lib/auth';
+
 export async function POST(req: Request) {
   try {
     const session = await getServerSession(authOptions);
@@ -32,12 +33,15 @@ export async function POST(req: Request) {
 
     await connectDB();
 
-    const uploadDir = join(process.cwd(), 'public', 'uploads');
+    // Use different upload directory based on environment
+    const uploadDir =
+      process.env.VERCEL === 'true' ? '/tmp/uploads' : join(process.cwd(), 'public', 'uploads');
+
     try {
+      // Create the directory if it doesn't exist
       await mkdir(uploadDir, { recursive: true });
     } catch (err) {
-      console.log(err)
-      
+      console.log('Error creating directory:', err);
     }
 
     const imagePaths: string[] = [];
@@ -51,7 +55,7 @@ export async function POST(req: Request) {
       const filepath = join(uploadDir, filename);
 
       await writeFile(filepath, buffer);
-      imagePaths.push(`/uploads/${filename}`);
+      imagePaths.push(`/uploads/${filename}`); // This may need further adjustment based on your front-end
     }
 
     const existingUser = await User.findOne({ email, name });
