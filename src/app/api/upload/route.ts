@@ -33,9 +33,9 @@ export async function POST(req: Request) {
 
     await connectDB();
 
-    // Use different upload directory based on environment
-    const uploadDir =
-      process.env.VERCEL === 'true' ? '/tmp/uploads' : join(process.cwd(), 'public', 'uploads');
+    // Check the environment to determine where to upload the files
+    const isVercel = process.env.NEXT_PUBLIC_VERCEL_ENV === 'production';
+    const uploadDir = isVercel ? '/tmp/uploads' : join(process.cwd(), 'public', 'uploads');
 
     try {
       // Create the directory if it doesn't exist
@@ -55,7 +55,12 @@ export async function POST(req: Request) {
       const filepath = join(uploadDir, filename);
 
       await writeFile(filepath, buffer);
-      imagePaths.push(`/uploads/${filename}`); // This may need further adjustment based on your front-end
+
+      // The URL will change based on environment
+      const imageUrl = isVercel
+        ? `/uploads/${filename}`
+        : `/uploads/${filename}`;
+      imagePaths.push(imageUrl);
     }
 
     const existingUser = await User.findOne({ email, name });
