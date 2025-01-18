@@ -33,15 +33,12 @@ export async function POST(req: Request) {
 
     await connectDB();
 
-    // Check the environment to determine where to upload the files
-    const isVercel = process.env.NEXT_PUBLIC_VERCEL_ENV === 'production';
-    const uploadDir = isVercel ? '/tmp/uploads' : join(process.cwd(), 'public', 'uploads');
-
+    // Use /tmp directory for file storage in Vercel (serverless environment)
+    const uploadDir = '/tmp/uploads';  // Temporary directory in serverless platforms
     try {
-      // Create the directory if it doesn't exist
-      await mkdir(uploadDir, { recursive: true });
+      // mkdirSync is not available in Vercel environment, so we'll skip it and rely on Vercel to handle temp dir.
     } catch (err) {
-      console.log('Error creating directory:', err);
+      console.log(err);
     }
 
     const imagePaths: string[] = [];
@@ -55,12 +52,7 @@ export async function POST(req: Request) {
       const filepath = join(uploadDir, filename);
 
       await writeFile(filepath, buffer);
-
-      // The URL will change based on environment
-      const imageUrl = isVercel
-        ? `/uploads/${filename}`
-        : `/uploads/${filename}`;
-      imagePaths.push(imageUrl);
+      imagePaths.push(`/uploads/${filename}`); // This may need further adjustment based on your front-end
     }
 
     const existingUser = await User.findOne({ email, name });
